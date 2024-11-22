@@ -1,0 +1,95 @@
+{% extends 'RentEase/base.html' %}
+
+{% block title %}My Bookings - RentEase{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">My Bookings</h1>
+
+<div class="row">
+    {% for booking in bookings %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="row g-0">
+                <div class="col-md-4">
+                    {% if booking.property.images.exists %}
+                    <img src="{{ booking.property.images.first.image.url }}" class="img-fluid rounded-start h-100" style="object-fit: cover;" alt="{{ booking.property.title }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/200x200?text=No+Image" class="img-fluid rounded-start" alt="No Image">
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ booking.property.title }}</h5>
+                        <p class="card-text text-muted">{{ booking.property.city }}, {{ booking.property.state }}</p>
+                        
+                        <div class="mb-2">
+                            <span class="badge {% if booking.status == 'approved' %}bg-success
+                                           {% elif booking.status == 'pending' %}bg-warning
+                                           {% elif booking.status == 'rejected' %}bg-danger
+                                           {% else %}bg-secondary{% endif %}">
+                                {{ booking.status|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="small text-muted mb-2">
+                            <div><i class="fas fa-calendar"></i> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</div>
+                            <div><i class="fas fa-dollar-sign"></i> ${{ booking.property.price }}/month</div>
+                        </div>
+                        
+                        {% if booking.message %}
+                        <p class="card-text small">
+                            <strong>Your message:</strong><br>
+                            {{ booking.message }}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="mt-2">
+                            <a href="{% url 'rentease:property_detail' booking.property.slug %}" class="btn btn-sm btn-outline-primary">
+                                View Property
+                            </a>
+                            {% if booking.status == 'pending' %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ booking.id }}">
+                                Cancel Request
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if booking.status == 'pending' %}
+    <!-- Cancel Booking Modal -->
+    <div class="modal fade" id="cancelModal{{ booking.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Booking Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel your booking request for "{{ booking.property.title }}"?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <form method="post" action="{% url 'rentease:cancel_booking' booking.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Cancel Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> You don't have any bookings yet.
+            <br>
+            <a href="{% url 'rentease:property_list' %}" class="btn btn-primary mt-3">Browse Properties</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

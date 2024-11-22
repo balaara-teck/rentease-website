@@ -1,0 +1,17 @@
+{% extends 'RentEase/base.html' %}
+
+{% block title %}Logged Out - RentEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h1 class="h3 mb-4">Logged Out</h1>
+                <p>You have been successfully logged out.</p>
+                <a href="{% url 'login' %}" class="btn btn-primary">Login Again</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

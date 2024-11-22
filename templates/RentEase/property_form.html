@@ -1,0 +1,106 @@
+{% extends 'RentEase/base.html' %}
+
+{% block title %}List Your Property - RentEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h3 mb-4">List Your Property</h1>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <h5 class="mb-3">Basic Information</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Property Type</label>
+                            <select name="property_type" class="form-select" required>
+                                <option value="">Select type...</option>
+                                <option value="house">House</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="villa">Villa</option>
+                                <option value="studio">Studio</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Price per Month ($)</label>
+                            <input type="number" name="price" class="form-control" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Property Details -->
+                    <h5 class="mb-3 mt-4">Property Details</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Bedrooms</label>
+                            <input type="number" name="bedrooms" class="form-control" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Bathrooms</label>
+                            <input type="number" name="bathrooms" class="form-control" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Area (m²)</label>
+                            <input type="number" name="area" class="form-control" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Location -->
+                    <h5 class="mb-3 mt-4">Location</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input type="text" name="address" class="form-control" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">State</label>
+                            <input type="text" name="state" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">ZIP Code</label>
+                            <input type="text" name="zip_code" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Images -->
+                    <h5 class="mb-3 mt-4">Property Images</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Images</label>
+                        <input type="file" name="images" class="form-control" multiple accept="image/*" required>
+                        <div class="form-text">You can select multiple images. The first image will be the main image.</div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">List Property</button>
+                        <a href="{% url 'rentease:property_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+v
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environment variables
+.env
+*.env
+
+# Django stuff:
+db.sqlite3
+*.sqlite3
+/media/
+/staticfiles/
+/static/
+
+# Logs
+*.log
+*.pot
+*.pyc
+
+# Virtual environment
+venv/
+env/
+
+# Cache
+*.cache
+*.mo
+*.pid
+*.swp
+*.swo
+.cache/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+*.cover
+.coverage.*
+
+# Test results
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.hypothesis/
+
+# MyPy and type hints
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Sentry files
+.sentrycli
+
+# Local settings (if applicable)
+local_settings.py

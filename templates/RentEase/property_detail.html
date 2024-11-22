@@ -1,0 +1,328 @@
+{% extends 'RentEase/base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} - RentEase{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Property Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 mb-3">{{ property.title }}</h1>
+            <p class="text-muted mb-2">
+                <i class="fas fa-map-marker-alt me-2"></i>{{ property.city }}, {{ property.state }}
+            </p>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-primary me-2">{{ property.get_property_type_display }}</span>
+                <span class="h4 mb-0 me-2">${{ property.price }}</span>
+                <span class="text-muted">/month</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Images and Booking Section -->
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            {% if property.images.exists %}
+            <div id="propertyCarousel" class="carousel slide mb-4 shadow-sm rounded" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in property.images.all %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <div class="ratio ratio-16x9">
+                            <img src="{{ image.image.url }}" class="d-block w-100 object-fit-cover" alt="Property Image {{ forloop.counter }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if property.images.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                {% endif %}
+            </div>
+            {% else %}
+            <div id="propertyCarousel" class="carousel slide mb-4 shadow-sm rounded" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="ratio ratio-16x9">
+                            <img src="{% static 'RentEase/images/default-property.jpg' %}" class="d-block w-100 object-fit-cover" alt="Default Property Image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Booking and Contact Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-4">Contact & Booking</h3>
+                    
+                    <!-- Owner Information -->
+                    <div class="d-flex align-items-center mb-4">
+                        {% if property.owner.profile.avatar %}
+                        <img src="{{ property.owner.profile.avatar.url }}" class="rounded-circle me-3" width="60" height="60" alt="Owner Avatar">
+                        {% else %}
+                        <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user text-white fa-2x"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="h6 mb-1">{{ property.owner.get_full_name|default:property.owner.username }}</h4>
+                            <p class="text-muted mb-0"><i class="fas fa-user-shield me-1"></i> Verified Owner</p>
+                        </div>
+                    </div>
+
+                    <!-- Contact Options -->
+                    {% if user.is_authenticated and user != property.owner %}
+                    <div class="mb-4">
+                        <button type="button" class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#contactModal">
+                            <i class="fas fa-envelope me-2"></i>Contact Owner
+                        </button>
+                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                            <i class="fas fa-calendar-check me-2"></i>Book Now
+                        </button>
+                    </div>
+                    {% elif not user.is_authenticated %}
+                    <div class="alert alert-info mb-4">
+                        <p class="mb-2"><i class="fas fa-info-circle me-2"></i>Please log in to:</p>
+                        <ul class="mb-0">
+                            <li>Contact the owner</li>
+                            <li>Book this property</li>
+                            <li>Save to favorites</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Proceed
+                    </a>
+                    {% endif %}
+
+                    <!-- Quick Info -->
+                    <hr>
+                    <div class="property-info">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-bed me-2"></i>Bedrooms</span>
+                            <span class="fw-bold">{{ property.bedrooms }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-bath me-2"></i>Bathrooms</span>
+                            <span class="fw-bold">{{ property.bathrooms }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-ruler-combined me-2"></i>Area</span>
+                            <span class="fw-bold">{{ property.area }} sq ft</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-calendar-alt me-2"></i>Available From</span>
+                            <span class="fw-bold">{{ property.available_from|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Description -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">About this property</h3>
+                    <p>{{ property.description }}</p>
+
+                    {% if property.amenities.exists %}
+                    <h4 class="h6 mt-4 mb-3">Amenities</h4>
+                    <div class="row">
+                        {% for amenity in property.amenities.all %}
+                        <div class="col-6 col-md-4 mb-2">
+                            <i class="fas fa-check text-success me-2"></i>{{ amenity.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <h4 class="h6 mt-4 mb-3">Location</h4>
+                    <p class="mb-0">{{ property.address }}</p>
+                    <p class="mb-0">{{ property.city }}, {{ property.state }} {{ property.zip_code }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    {% if user.is_authenticated and user != property.owner %}
+    <div class="modal fade" id="contactModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Contact {{ property.owner.get_full_name|default:property.owner.username }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{% url 'rentease:contact_owner' property.slug %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" name="subject" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea name="message" class="form-control" rows="4" required></textarea>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Your email ({{ user.email }}) will be shared with the owner so they can respond to you directly.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Booking Modal -->
+    {% if user.is_authenticated and user != property.owner %}
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book {{ property.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        {% if existing_bookings %}
+                        <div class="alert alert-info mb-3">
+                            <h6 class="mb-2">Existing Bookings:</h6>
+                            <ul class="list-unstyled mb-0">
+                            {% for booking in existing_bookings %}
+                                <li>{{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if booking_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ booking_form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            {{ booking_form.start_date }}
+                            {% if booking_form.start_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ booking_form.start_date.errors.0 }}
+                            </div>
+                            {% endif %}
+                            {% if booking_form.start_date.help_text %}
+                            <div class="form-text">{{ booking_form.start_date.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            {{ booking_form.end_date }}
+                            {% if booking_form.end_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ booking_form.end_date.errors.0 }}
+                            </div>
+                            {% endif %}
+                            {% if booking_form.end_date.help_text %}
+                            <div class="form-text">{{ booking_form.end_date.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Message (Optional)</label>
+                            {{ booking_form.message }}
+                            {% if booking_form.message.help_text %}
+                            <div class="form-text">{{ booking_form.message.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Booking Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.querySelector('input[name="start_date"]');
+    const endDate = document.querySelector('input[name="end_date"]');
+    
+    if (startDate && endDate) {
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        startDate.min = today;
+        
+        // Update end date minimum when start date changes
+        startDate.addEventListener('change', function() {
+            endDate.min = this.value;
+            if (endDate.value && endDate.value < this.value) {
+                endDate.value = this.value;
+            }
+        });
+        
+        // Existing bookings
+        const existingBookings = [
+            {% for booking in existing_bookings %}
+                {
+                    start: '{{ booking.start_date|date:"Y-m-d" }}',
+                    end: '{{ booking.end_date|date:"Y-m-d" }}'
+                },
+            {% endfor %}
+        ];
+        
+        // Disable dates that are already booked
+        function isDateBooked(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            return existingBookings.some(booking => 
+                dateStr >= booking.start && dateStr <= booking.end
+            );
+        }
+        
+        // Add warning if selected date range overlaps with existing bookings
+        function checkDateOverlap() {
+            if (startDate.value && endDate.value) {
+                const start = new Date(startDate.value);
+                const end = new Date(endDate.value);
+                
+                for (const booking of existingBookings) {
+                    const bookingStart = new Date(booking.start);
+                    const bookingEnd = new Date(booking.end);
+                    
+                    if (start <= bookingEnd && end >= bookingStart) {
+                        alert('Warning: Selected dates overlap with existing bookings!');
+                        break;
+                    }
+                }
+            }
+        }
+        
+        startDate.addEventListener('change', checkDateOverlap);
+        endDate.addEventListener('change', checkDateOverlap);
+    }
+});
+</script>
+{% endblock extra_js %}
+{% endblock content %}

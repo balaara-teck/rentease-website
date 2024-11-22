@@ -1,0 +1,107 @@
+{% extends 'RentEase/base.html' %}
+{% load static %}
+
+{% block title %}{{ user.get_full_name }} - Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <img src="{{ profile.get_avatar_url }}" alt="{{ user.get_full_name }}" 
+                         class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h3 class="h4 mb-2">{{ user.get_full_name }}</h3>
+                    <p class="text-muted mb-3">Member since {{ profile.date_joined|date:"F Y" }}</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'rentease:profile_edit' %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="{% url 'rentease:change_password' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light-green">
+                    <h4 class="mb-0">Profile Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <p class="mb-0"><strong>Email</strong></p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <p class="mb-0"><strong>Phone</strong></p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ profile.phone_number|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <p class="mb-0"><strong>Location</strong></p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ profile.location|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <p class="mb-0"><strong>About</strong></p>
+                        </div>
+                        <div class="col-sm-9">
+                            <p class="text-muted mb-0">{{ profile.bio|default:"No bio provided"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light-green">
+                            <h5 class="mb-0">My Properties</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4 text-center mb-3">{{ properties.count }}</h2>
+                            <div class="d-grid">
+                                <a href="{% url 'rentease:my_properties' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-home me-2"></i>View My Properties
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light-green">
+                            <h5 class="mb-0">My Bookings</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4 text-center mb-3">{{ bookings.count }}</h2>
+                            <div class="d-grid">
+                                <a href="{% url 'rentease:my_bookings' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-calendar-alt me-2"></i>View My Bookings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

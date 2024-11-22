@@ -1,0 +1,84 @@
+{% extends 'RentEase/base.html' %}
+
+{% block title %}My Properties - RentEase{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">My Properties</h1>
+    <a href="{% url 'rentease:property_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> List New Property
+    </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for property in properties %}
+    <div class="col">
+        <div class="card shadow-sm property-card">
+            {% if property.images.exists %}
+            <img src="{{ property.images.first.image.url }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <img src="https://via.placeholder.com/400x200?text=No+Image" class="card-img-top" alt="No Image" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body p-3">
+                <h5 class="card-title text-truncate mb-1">{{ property.title }}</h5>
+                <p class="card-text text-muted small mb-2">{{ property.city }}, {{ property.state }}</p>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="price-tag">${{ property.price }}/month</span>
+                    <span class="badge {% if property.is_available %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if property.is_available %}Available{% else %}Not Available{% endif %}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mb-3">
+                    <span><i class="fas fa-bed"></i> {{ property.bedrooms }}</span>
+                    <span><i class="fas fa-bath"></i> {{ property.bathrooms }}</span>
+                    <span><i class="fas fa-ruler-combined"></i> {{ property.area }}m²</span>
+                </div>
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'rentease:property_detail' property.slug %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{% url 'rentease:property_edit' property.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ property.id }}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal{{ property.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Property</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete "{{ property.title }}"? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{% url 'rentease:property_delete' property.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete Property</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <p class="mb-3">You haven't listed any properties yet.</p>
+            <a href="{% url 'rentease:property_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> List Your First Property
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
