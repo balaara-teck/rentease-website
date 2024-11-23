@@ -9,6 +9,9 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 def validate_image_size(value):
     if value.size > settings.MAX_UPLOAD_SIZE:
@@ -23,6 +26,12 @@ class Property(models.Model):
         ('other', 'Other'),
     ]
     
+    PROPERTY_STATUS = [
+        ('available', 'Available'),
+        ('booked', 'Booked'),
+        ('unavailable', 'Unavailable'),
+    ]
+    
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='properties')
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -35,6 +44,7 @@ class Property(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     zip_code = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, choices=PROPERTY_STATUS, default='available')
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -99,7 +109,7 @@ class PropertyAmenity(models.Model):
         verbose_name_plural = "Property Amenities"
 
 class Booking(models.Model):
-    STATUS_CHOICES = [
+    BOOKING_STATUS = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
@@ -110,13 +120,53 @@ class Booking(models.Model):
     tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
     start_date = models.DateField()
     end_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=BOOKING_STATUS, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"Booking for {self.property.title} by {self.tenant.username}"
+
+@receiver(post_save, sender=Booking)
+def booking_status_changed(sender, instance, created, **kwargs):
+    """Handle booking status changes and notifications"""
+    if created:
+        # Update property status
+        property_instance = instance.property
+        property_instance.status = 'booked'
+        property_instance.save()
+        
+        # Format dates nicely
+        start_date = instance.start_date.strftime("%B %d, %Y")
+        end_date = instance.end_date.strftime("%B %d, %Y")
+        
+        # Create context for email template
+        context = {
+            'booking': instance,
+            'property': property_instance,
+            'tenant': instance.tenant,
+            'start_date': start_date,
+            'end_date': end_date,
+            'site_url': settings.SITE_URL,
+        }
+        
+        # Send email to property owner
+        subject = f'New Booking Request for {property_instance.title}'
+        
+        # Render both versions of the email
+        html_message = render_to_string('RentEase/email/booking_notification.html', context)
+        text_message = render_to_string('RentEase/email/booking_notification_plain.txt', context)
+        
+        # Create and send the email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[property_instance.owner.email],
+        )
+        email.attach_alternative(html_message, "text/html")
+        email.send(fail_silently=False)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

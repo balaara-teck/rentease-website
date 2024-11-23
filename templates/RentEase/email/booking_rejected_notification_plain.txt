@@ -1,0 +1,21 @@
+Booking Request Update
+====================
+
+Hello {{ tenant.first_name|default:tenant.username }},
+
+We regret to inform you that your booking request has been declined.
+
+BOOKING DETAILS
+--------------
+Property: {{ property.title }}
+Location: {{ property.city }}, {{ property.state }}
+Requested Check-in: {{ booking.start_date|date:"F d, Y" }}
+Requested Check-out: {{ booking.end_date|date:"F d, Y" }}
+
+Don't worry! There are many other great properties available. You can browse more properties here:
+{{ site_url }}{% url 'rentease:property_list' %}
+
+If you have any questions or would like to book a different property, please don't hesitate to contact us.
+
+Best regards,
+The RentEase Team

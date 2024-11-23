@@ -12,6 +12,24 @@
     {% load static %}
     <link href="{% static 'RentEase/css/custom.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Custom styles */
+        .page-heading {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.25rem;
+        }
+    </style>
 </head>
 <body class="d-flex flex-column h-100">
     <!-- Navbar -->
@@ -62,15 +80,14 @@
                                     <i class="fas fa-user me-2"></i>Profile
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'rentease:my_properties' %}">
-                                    <i class="fas fa-home me-2"></i>My Properties
-                                </a>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'rentease:my_properties' %}">My Properties</a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'rentease:my_bookings' %}">
-                                    <i class="fas fa-calendar-alt me-2"></i>My Bookings
-                                </a>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'rentease:manage_bookings' %}">Manage Bookings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'rentease:my_bookings' %}">My Bookings</a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>

@@ -11,6 +11,9 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import date
 import os
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 def property_list(request):
     query = request.GET.get('q')
@@ -332,3 +335,86 @@ def custom_logout(request):
 
 def logout_view(request):
     return custom_logout(request)
+
+@login_required
+def manage_bookings(request):
+    """View for property owners to manage their bookings"""
+    # Get all properties owned by the current user
+    user_properties = Property.objects.filter(owner=request.user)
+    
+    # Get all bookings for these properties
+    bookings = Booking.objects.filter(property__in=user_properties).order_by('-created_at')
+    
+    # Group bookings by status
+    pending_bookings = bookings.filter(status='pending')
+    approved_bookings = bookings.filter(status='approved')
+    rejected_bookings = bookings.filter(status='rejected')
+    
+    context = {
+        'pending_bookings': pending_bookings,
+        'approved_bookings': approved_bookings,
+        'rejected_bookings': rejected_bookings,
+    }
+    
+    return render(request, 'RentEase/manage_bookings.html', context)
+
+@login_required
+def update_booking_status(request, booking_id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
+
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        
+        # Check if the user is the property owner
+        if booking.property.owner != request.user:
+            return JsonResponse({'status': 'error', 'error': 'Unauthorized'})
+        
+        new_status = request.POST.get('status')
+        if new_status not in ['approved', 'rejected']:
+            return JsonResponse({'status': 'error', 'error': 'Invalid status'})
+        
+        # Update booking status
+        booking.status = new_status
+        booking.save()
+        
+        # Send email notification
+        context = {
+            'tenant': booking.tenant,
+            'property': booking.property,
+            'booking': booking,
+            'site_url': settings.SITE_URL,
+        }
+        
+        if new_status == 'approved':
+            subject = 'Your Booking Request has been Approved!'
+            html_template = 'RentEase/email/booking_approved_notification.html'
+            text_template = 'RentEase/email/booking_approved_notification_plain.txt'
+        else:  # rejected
+            subject = 'Update on Your Booking Request'
+            html_template = 'RentEase/email/booking_rejected_notification.html'
+            text_template = 'RentEase/email/booking_rejected_notification_plain.txt'
+        
+        # Render email templates
+        html_message = render_to_string(html_template, context)
+        plain_message = render_to_string(text_template, context)
+        
+        # Send email
+        msg = EmailMultiAlternatives(
+            subject,
+            plain_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [booking.tenant.email]
+        )
+        msg.attach_alternative(html_message, "text/html")
+        msg.send()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Booking has been {new_status}. Notification email sent to tenant.'
+        })
+        
+    except Booking.DoesNotExist:
+        return JsonResponse({'status': 'error', 'error': 'Booking not found'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'error': str(e)})

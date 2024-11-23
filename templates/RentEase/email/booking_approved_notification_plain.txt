@@ -1,0 +1,22 @@
+Booking Approved!
+================
+
+Hello {{ tenant.first_name|default:tenant.username }},
+
+Great news! Your booking request has been approved.
+
+BOOKING DETAILS
+--------------
+Property: {{ property.title }}
+Location: {{ property.city }}, {{ property.state }}
+Check-in: {{ booking.start_date|date:"F d, Y" }}
+Check-out: {{ booking.end_date|date:"F d, Y" }}
+Price: ${{ property.price }}/month
+
+You can view your booking details and contact the property owner at:
+{{ site_url }}{% url 'rentease:my_bookings' %}
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+The RentEase Team

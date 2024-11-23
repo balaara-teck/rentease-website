@@ -1,0 +1,33 @@
+NEW BOOKING REQUEST
+==================
+
+Hello {{ property.owner.first_name|default:property.owner.username }},
+
+You have received a new booking request for your property.
+
+PROPERTY DETAILS
+---------------
+Name: {{ property.title }}
+Location: {{ property.city }}, {{ property.state }}
+Price: ${{ property.price }}/month
+
+BOOKING INFORMATION
+------------------
+Check-in: {{ start_date }}
+Check-out: {{ end_date }}
+Status: {{ booking.get_status_display }}
+{% if booking.message %}
+Message from tenant:
+{{ booking.message }}{% endif %}
+
+TENANT INFORMATION
+-----------------
+Name: {{ tenant.get_full_name|default:tenant.username }}
+Email: {{ tenant.email }}{% if tenant.profile.phone_number %}
+Phone: {{ tenant.profile.phone_number }}{% endif %}
+
+To review this booking request, please visit:
+{{ site_url }}{% url 'rentease:property_detail' property.slug %}
+
+Best regards,
+RentEase Team

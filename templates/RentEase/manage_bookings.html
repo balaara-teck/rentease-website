@@ -1,0 +1,139 @@
+{% extends 'RentEase/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="page-heading mb-4">Manage Bookings</h1>
+
+    <!-- Pending Bookings -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h2 class="h5 mb-0">Pending Bookings</h2>
+        </div>
+        <div class="card-body">
+            {% if pending_bookings %}
+                {% for booking in pending_bookings %}
+                    <div class="booking-item mb-3 p-3 border rounded" id="booking-{{ booking.id }}">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h3 class="h5">{{ booking.property.title }}</h3>
+                                <p class="mb-1"><strong>Tenant:</strong> {{ booking.tenant.get_full_name|default:booking.tenant.username }}</p>
+                                <p class="mb-1"><strong>Dates:</strong> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</p>
+                                <p class="mb-1"><strong>Email:</strong> {{ booking.tenant.email }}</p>
+                                {% if booking.tenant.profile.phone_number %}
+                                    <p class="mb-1"><strong>Phone:</strong> {{ booking.tenant.profile.phone_number }}</p>
+                                {% endif %}
+                                {% if booking.message %}
+                                    <p class="mb-1"><strong>Message:</strong> {{ booking.message }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <button class="btn btn-success mb-2 update-status" data-booking-id="{{ booking.id }}" data-status="approved">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn btn-danger mb-2 update-status" data-booking-id="{{ booking.id }}" data-status="rejected">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No pending bookings</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Approved Bookings -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h2 class="h5 mb-0">Approved Bookings</h2>
+        </div>
+        <div class="card-body">
+            {% if approved_bookings %}
+                {% for booking in approved_bookings %}
+                    <div class="booking-item mb-3 p-3 border rounded">
+                        <h3 class="h5">{{ booking.property.title }}</h3>
+                        <p class="mb-1"><strong>Tenant:</strong> {{ booking.tenant.get_full_name|default:booking.tenant.username }}</p>
+                        <p class="mb-1"><strong>Dates:</strong> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ booking.tenant.email }}</p>
+                        {% if booking.tenant.profile.phone_number %}
+                            <p class="mb-1"><strong>Phone:</strong> {{ booking.tenant.profile.phone_number }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No approved bookings</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Rejected Bookings -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h2 class="h5 mb-0">Rejected Bookings</h2>
+        </div>
+        <div class="card-body">
+            {% if rejected_bookings %}
+                {% for booking in rejected_bookings %}
+                    <div class="booking-item mb-3 p-3 border rounded">
+                        <h3 class="h5">{{ booking.property.title }}</h3>
+                        <p class="mb-1"><strong>Tenant:</strong> {{ booking.tenant.get_full_name|default:booking.tenant.username }}</p>
+                        <p class="mb-1"><strong>Dates:</strong> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ booking.tenant.email }}</p>
+                        {% if booking.tenant.profile.phone_number %}
+                            <p class="mb-1"><strong>Phone:</strong> {{ booking.tenant.profile.phone_number }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No rejected bookings</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    document.querySelectorAll('.update-status').forEach(button => {
+        button.addEventListener('click', async function() {
+            const bookingId = this.dataset.bookingId;
+            const newStatus = this.dataset.status;
+            const bookingItem = document.getElementById(`booking-${bookingId}`);
+            
+            try {
+                const response = await fetch(`{% url 'rentease:update_booking_status' 0 %}`.replace('0', bookingId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `status=${newStatus}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Show success message
+                    alert(data.message);
+                    // Reload the page to show updated lists
+                    location.reload();
+                } else {
+                    alert('Error updating booking status: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error updating booking status. Please try again.');
+                console.error('Error:', error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
