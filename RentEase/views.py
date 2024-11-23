@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth import logout, update_session_auth_hash, login, authenticate
 from django.contrib.auth.forms import PasswordChangeForm
 from .forms import RegisterForm, BookingForm, PropertyEditForm, ProfileForm
 from .models import Property, PropertyImage, Booking, Profile
@@ -329,8 +329,29 @@ def register(request):
         form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
 
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('rentease:property_list')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('rentease:property_list')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    
+    return render(request, 'registration/login.html')
+
 def custom_logout(request):
     logout(request)
+    messages.success(request, 'You have been successfully logged out.')
     return redirect('rentease:property_list')
 
 def logout_view(request):
