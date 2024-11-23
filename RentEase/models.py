@@ -44,6 +44,8 @@ class Property(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     zip_code = models.CharField(max_length=20)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     status = models.CharField(max_length=20, choices=PROPERTY_STATUS, default='available')
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

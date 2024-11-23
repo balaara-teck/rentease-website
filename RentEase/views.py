@@ -14,6 +14,7 @@ import os
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
+import requests
 
 def property_list(request):
     query = request.GET.get('q')
@@ -76,11 +77,13 @@ def property_detail(request, slug):
             end_date__gte=date.today()
         ).order_by('start_date')
     
-    return render(request, 'RentEase/property_detail.html', {
+    context = {
         'property': property,
         'booking_form': booking_form,
-        'existing_bookings': existing_bookings
-    })
+        'existing_bookings': existing_bookings,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY
+    }
+    return render(request, 'RentEase/property_detail.html', context)
 
 @login_required
 def property_create(request):
@@ -98,6 +101,7 @@ def property_create(request):
         state = request.POST.get('state')
         zip_code = request.POST.get('zip_code')
         
+        # Create the property
         property = Property.objects.create(
             owner=request.user,
             title=title,
@@ -113,16 +117,27 @@ def property_create(request):
             zip_code=zip_code
         )
         
+        # Geocode the address
+        try:
+            full_address = f"{address}, {city}, {state} {zip_code}"
+            geocoding_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={full_address}&key={settings.GOOGLE_MAPS_API_KEY}"
+            response = requests.get(geocoding_url)
+            data = response.json()
+            
+            if data['status'] == 'OK':
+                location = data['results'][0]['geometry']['location']
+                property.latitude = location['lat']
+                property.longitude = location['lng']
+                property.save()
+        except Exception as e:
+            messages.warning(request, 'Could not determine exact location on map.')
+        
         # Handle image uploads
         images = request.FILES.getlist('images')
         for image in images:
-            PropertyImage.objects.create(
-                property=property,
-                image=image,
-                is_main=PropertyImage.objects.filter(property=property).count() == 0
-            )
+            PropertyImage.objects.create(property=property, image=image)
         
-        messages.success(request, 'Property listed successfully!')
+        messages.success(request, 'Property created successfully!')
         return redirect('rentease:property_detail', slug=property.slug)
     
     return render(request, 'RentEase/property_form.html')

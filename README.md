@@ -1,57 +1,64 @@
-# RentEase - Property Rental Management System
+# RentEase - House Rental Platform
 
-RentEase is a comprehensive property rental management system built with Django that enables property owners to list their properties and manage bookings while allowing tenants to browse and book properties.
+RentEase is a user-friendly platform that connects house owners with potential tenants, streamlining the house rental process. Our platform focuses exclusively on residential properties, making it easier for homeowners to list their houses and for tenants to find their perfect home.
 
 ## Features
 
-### For Property Owners
-- Property Management
-  * List new properties with detailed information
-  * Upload multiple property images
-  * Set property status (available, booked, unavailable)
-  * Edit property details
-  * Delete properties
+### For House Owners
+- House Management
+  * List your house with detailed information
+  * Upload multiple house photos
+  * Set house availability status
+  * Update house details and pricing
+  * Track rental history
 
-- Booking Management
-  * View all booking requests
-  * Approve/reject booking requests
-  * Automatic email notifications
-  * Booking status tracking
+- Tenant Management
+  * Review tenant applications
+  * Approve/reject rental requests
+  * Communicate with potential tenants
+  * Manage rental agreements
+  * Receive instant notifications
 
 ### For Tenants
-- Property Search
-  * Browse available properties
-  * Search by location, price, and amenities
-  * View property details and images
-  * Check property availability
+- House Search
+  * Browse available houses
+  * Search by location and preferences
+  * View detailed house information
+  * Check real-time availability
+  * Save favorite houses
 
-- Booking System
-  * Request property bookings
-  * View booking status
-  * Cancel pending bookings
-  * Contact property owners
+- Rental Process
+  * Submit rental applications
+  * Track application status
+  * Communicate with house owners
+  * Manage active rentals
+  * View rental history
 
-### General Features
-- User Authentication
-  * User registration and login
-  * Profile management
-  * Password change functionality
-  * Social authentication support
+### Platform Features
+- User Profiles
+  * Secure registration and login
+  * Verified user accounts
+  * Profile customization
+  * Rental history tracking
+  * Communication preferences
 
-- Email Notifications
-  * Booking request notifications
-  * Booking status updates
-  * HTML and plain text email support
-  * Customized email templates
+- Communication System
+  * In-app messaging
+  * Email notifications
+  * Application updates
+  * Custom message templates
+  * Read receipts
 
-- Responsive Design
-  * Mobile-first approach
-  * Modern UI/UX
-  * Bootstrap framework
-  * Font Awesome icons
+- Modern Interface
+  * Clean, intuitive design
+  * Mobile-responsive layout
+  * Easy navigation
+  * Dark/light mode
+  * Accessibility features
 
-## Technical Stack
+## Technical Details
 
+### Built With
 - Backend:
   * Django 5.1.3
   * Python 3.12
@@ -60,15 +67,17 @@ RentEase is a comprehensive property rental management system built with Django 
 - Frontend:
   * HTML5/CSS3
   * JavaScript
-  * Bootstrap
-  * Font Awesome
+  * Bootstrap 5.3.2
+  * Font Awesome 6.0.0
 
-- Image Processing:
-  * Pillow for image optimization
-  * Automatic image resizing
-  * Format conversion
+### Security Features
+- Secure user authentication
+- Data encryption
+- CSRF protection
+- XSS prevention
+- Input validation
 
-## Installation
+## Getting Started
 
 1. Clone the repository:
 ```bash
@@ -76,81 +85,57 @@ git clone https://github.com/yourusername/rentease-website.git
 cd rentease-website
 ```
 
-2. Create and activate virtual environment:
+2. Set up virtual environment:
 ```bash
 python -m venv v
 source v/bin/activate  # On Windows: v\Scripts\activate
 ```
 
-3. Install dependencies:
+3. Install requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Configure environment variables:
+4. Configure settings:
 ```bash
 cp .env.example .env
-# Edit .env with your settings
+# Update .env with your settings
 ```
 
-5. Run migrations:
+5. Initialize database:
 ```bash
 python manage.py migrate
 ```
 
-6. Create superuser:
+6. Create admin account:
 ```bash
 python manage.py createsuperuser
 ```
 
-7. Run the development server:
+7. Start development server:
 ```bash
 python manage.py runserver
 ```
 
-## Project Structure
+## Usage
 
-```
-rentease-website/
-├── RentEase/
-│   ├── migrations/
-│   ├── management/
-│   ├── templates/
-│   │   └── RentEase/
-│   │       ├── email/
-│   │       └── ...
-│   ├── models.py
-│   ├── views.py
-│   ├── forms.py
-│   ├── urls.py
-│   └── admin.py
-├── engine/
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── static/
-├── media/
-├── requirements.txt
-└── manage.py
-```
+### For House Owners
+1. Create an account and verify your email
+2. Complete your profile with personal details
+3. Add your house listing with photos and details
+4. Review and respond to tenant applications
+5. Manage your rental agreements
 
-## Models
-
-- **Property**: Stores property information including type, price, location, and status
-- **PropertyImage**: Handles property images with automatic optimization
-- **Booking**: Manages booking requests and their statuses
-- **Profile**: Extends User model with additional information
-- **PropertyAmenity**: Stores property amenities
-
-## Views
-
-- Property listing and detail views
-- Booking management views
-- User profile views
-- Property management views
-- Search and filter views
+### For Tenants
+1. Register and verify your account
+2. Set up your tenant profile
+3. Search for available houses
+4. Submit rental applications
+5. Communicate with house owners
 
 ## Contributing
+
+We welcome contributions to RentEase! Please follow these steps:
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -160,11 +145,10 @@ rentease-website/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## Contact
 
-- Django documentation
-- Bootstrap framework
-- Font Awesome icons
-- Pillow library
+SolTeck - [GitHub](https://github.com/soltech)
+
+Project Link: [https://github.com/yourusername/rentease-website](https://github.com/yourusername/rentease-website)

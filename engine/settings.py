@@ -118,7 +118,13 @@ USE_TZ = True
 
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Maximum file upload size (5MB)
+MAX_UPLOAD_SIZE = 5242880
+
+# Google Maps API Key
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')  # Get from environment variable
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -136,9 +142,6 @@ LOGOUT_REDIRECT_URL = 'rentease:property_list'
 
 # Allow GET method for logout
 ACCOUNT_LOGOUT_ON_GET = True
-
-# Maximum file upload size (5MB)
-MAX_UPLOAD_SIZE = 5242880  # 5MB in bytes
 
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
