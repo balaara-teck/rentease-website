@@ -40,6 +40,10 @@ env/
 .vscode/
 *.iml
 
+# migrations
+*/migrations/*.py
+*/migrations/*.pyc
+
 # Distribution / packaging
 .Python
 build/

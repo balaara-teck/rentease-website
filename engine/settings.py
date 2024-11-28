@@ -26,10 +26,10 @@ SECRET_KEY = 'django-insecure-hoh)3t5sk-kzd!e)q+px!wmldavnin#*x9!@!wzm7k0ly)7hbm
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 # Site URL for development
-SITE_URL = 'http://127.0.0.1:8000' if DEBUG else 'https://your-production-domain.com'
+
 
 # Application definition
 
@@ -157,8 +157,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # Set this in y
 DEFAULT_FROM_EMAIL = 'RentEase <noreply@rentease.com>'
 
 # For development, you can use the console backend instead
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
