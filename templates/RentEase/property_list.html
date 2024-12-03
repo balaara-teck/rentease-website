@@ -5,11 +5,11 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-8">
-        <h1 class="page-heading">Available Properties</h1>
+        <h1 class="page-heading">Browse Homes, Apartments, Hotels &amp; More</h1>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4 d-lg-none">
         <form method="get" class="d-flex">
-            <input type="text" name="q" class="form-control me-2" placeholder="Search properties..." value="{{ query }}">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search properties...">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search"></i>
             </button>
@@ -19,7 +19,7 @@
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for property in properties %}
-    <div class="col">
+    <div class="col mb-3">
         <div class="card shadow-sm property-card">
             {% if property.images.exists %}
             <img src="{{ property.images.first.image.url }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">

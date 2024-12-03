@@ -1,106 +1,115 @@
 {% extends 'RentEase/base.html' %}
+{% load static %}
 
-{% block title %}List Your Property - RentEase{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h1 class="h3 mb-4">List Your Property</h1>
-                
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{{ title }}</h2>
                     
-                    <!-- Basic Information -->
-                    <h5 class="mb-3">Basic Information</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" name="title" class="form-control" required>
+                    {% if not property.subscription_active %}
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">Subscription Required</h5>
+                        <p>To list your property, you'll need to choose a subscription plan:</p>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Monthly Plan</h5>
+                                        <p class="display-4 my-3">$1</p>
+                                        <p class="text-muted">per month</p>
+                                        <button class="btn btn-primary subscribe-btn" data-plan-type="monthly">
+                                            Subscribe Monthly
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Yearly Plan</h5>
+                                        <p class="display-4 my-3">$10</p>
+                                        <p class="text-muted">per year</p>
+                                        <button class="btn btn-primary subscribe-btn" data-plan-type="yearly">
+                                            Subscribe Yearly
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="4" required></textarea>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Property Type</label>
-                            <select name="property_type" class="form-select" required>
-                                <option value="">Select type...</option>
-                                <option value="house">House</option>
-                                <option value="apartment">Apartment</option>
-                                <option value="villa">Villa</option>
-                                <option value="studio">Studio</option>
-                                <option value="other">Other</option>
-                            </select>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="propertyForm" class="{% if not property.subscription_active %}d-none{% endif %}">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Please correct the errors below.
+                        </div>
+                        {% endif %}
+                        
+                        {{ form.as_p }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Property Images</label>
+                            <input type="file" name="images" multiple class="form-control" accept="image/*">
                         </div>
                         
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Price per Month ($)</label>
-                            <input type="number" name="price" class="form-control" min="0" step="0.01" required>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                {% if property %}Update{% else %}Create{% endif %} Property
+                            </button>
+                            <a href="{% url 'rentease:property_list' %}" class="btn btn-secondary">Cancel</a>
                         </div>
-                    </div>
-                    
-                    <!-- Property Details -->
-                    <h5 class="mb-3 mt-4">Property Details</h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Bedrooms</label>
-                            <input type="number" name="bedrooms" class="form-control" min="0" required>
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Bathrooms</label>
-                            <input type="number" name="bathrooms" class="form-control" min="0" required>
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Area (m²)</label>
-                            <input type="number" name="area" class="form-control" min="0" step="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <!-- Location -->
-                    <h5 class="mb-3 mt-4">Location</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <input type="text" name="address" class="form-control" required>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">City</label>
-                            <input type="text" name="city" class="form-control" required>
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">State</label>
-                            <input type="text" name="state" class="form-control" required>
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">ZIP Code</label>
-                            <input type="text" name="zip_code" class="form-control" required>
-                        </div>
-                    </div>
-                    
-                    <!-- Images -->
-                    <h5 class="mb-3 mt-4">Property Images</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Upload Images</label>
-                        <input type="file" name="images" class="form-control" multiple accept="image/*" required>
-                        <div class="form-text">You can select multiple images. The first image will be the main image.</div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary">List Property</button>
-                        <a href="{% url 'rentease:property_list' %}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&vault=true"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+    const propertyForm = document.getElementById('propertyForm');
+    
+    subscribeButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const planType = this.dataset.planType;
+            
+            try {
+                // Create plan
+                const planResponse = await fetch(`{% url 'rentease:create_subscription_plan' property_id=property.id plan_type='PLAN_TYPE' %}`.replace('PLAN_TYPE', planType));
+                const planData = await planResponse.json();
+                
+                if (!planData.success) {
+                    throw new Error(planData.error || 'Failed to create plan');
+                }
+                
+                // Create subscription
+                const subscriptionResponse = await fetch(`{% url 'rentease:create_subscription' property_id=property.id plan_id='PLAN_ID' %}`.replace('PLAN_ID', planData.plan_id));
+                const subscriptionData = await subscriptionResponse.json();
+                
+                if (!subscriptionData.success) {
+                    throw new Error(subscriptionData.error || 'Failed to create subscription');
+                }
+                
+                // Redirect to PayPal
+                window.location.href = subscriptionData.approval_url;
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

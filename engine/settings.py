@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'RentEase',
+    'paypalrestsdk',  # Added paypalrestsdk to INSTALLED_APPS
 ]
 
 MIDDLEWARE = [
@@ -125,6 +126,11 @@ MAX_UPLOAD_SIZE = 5242880
 
 # Google Maps API Key
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')  # Get from environment variable
+
+# PayPal Settings
+PAYPAL_MODE = "sandbox"  # Change to "live" for production
+PAYPAL_CLIENT_ID = "YOUR_PAYPAL_CLIENT_ID"  # Replace with your PayPal client ID
+PAYPAL_CLIENT_SECRET = "YOUR_PAYPAL_CLIENT_SECRET"  # Replace with your PayPal client secret
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

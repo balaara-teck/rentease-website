@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils import timezone
 
 def validate_image_size(value):
     if value.size > settings.MAX_UPLOAD_SIZE:
@@ -51,6 +52,9 @@ class Property(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     slug = models.SlugField(unique=True, blank=True)
+    subscription_active = models.BooleanField(default=False)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
+    paypal_subscription_id = models.CharField(max_length=100, null=True, blank=True)
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -64,6 +68,15 @@ class Property(models.Model):
             
             self.slug = slug
         super().save(*args, **kwargs)
+    
+    def is_listing_visible(self):
+        if not self.subscription_active:
+            return False
+        if self.subscription_end_date and self.subscription_end_date < timezone.now():
+            self.subscription_active = False
+            self.save()
+            return False
+        return True
     
     def __str__(self):
         return self.title

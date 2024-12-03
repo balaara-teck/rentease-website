@@ -22,4 +22,8 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.custom_logout, name='custom_logout'),
+    path('property/<int:property_id>/create-plan/<str:plan_type>/', views.create_subscription_plan, name='create_subscription_plan'),
+    path('property/<int:property_id>/subscribe/<str:plan_id>/', views.create_subscription, name='create_subscription'),
+    path('property/<int:property_id>/subscription/success/', views.subscription_success, name='subscription_success'),
+    path('property/<int:property_id>/subscription/cancel/', views.subscription_cancel, name='subscription_cancel'),
 ]

@@ -1,20 +1,23 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
+from django.http import JsonResponse
+from engine import settings
+from django.urls import reverse
+from django.utils import timezone
+from .models import Property, PropertyImage, Booking, Profile
+from .forms import RegisterForm, BookingForm, PropertyEditForm, ProfileForm
 from django.contrib.auth import logout, update_session_auth_hash, login, authenticate
 from django.contrib.auth.forms import PasswordChangeForm
-from .forms import RegisterForm, BookingForm, PropertyEditForm, ProfileForm
-from .models import Property, PropertyImage, Booking, Profile
 from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import date
-import os
-from django.http import JsonResponse
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 import requests
+import paypalrestsdk
+from dateutil.relativedelta import relativedelta
+from .paypal_config import setup_paypal
 
 def property_list(request):
     query = request.GET.get('q')
@@ -88,59 +91,57 @@ def property_detail(request, slug):
 @login_required
 def property_create(request):
     if request.method == 'POST':
-        # Handle property creation
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        property_type = request.POST.get('property_type')
-        price = request.POST.get('price')
-        bedrooms = request.POST.get('bedrooms')
-        bathrooms = request.POST.get('bathrooms')
-        area = request.POST.get('area')
-        address = request.POST.get('address')
-        city = request.POST.get('city')
-        state = request.POST.get('state')
-        zip_code = request.POST.get('zip_code')
-        
-        # Create the property
+        form = PropertyEditForm(request.POST, request.FILES)
+        if form.is_valid():
+            property = form.save(commit=False)
+            property.owner = request.user
+            property.save()
+            
+            # Handle image uploads
+            images = request.FILES.getlist('images')
+            for image in images:
+                PropertyImage.objects.create(property=property, image=image)
+            
+            messages.success(request, 'Property listed successfully!')
+            return redirect('rentease:property_detail', slug=property.slug)
+    else:
+        form = PropertyEditForm()
+
+    # Get or create a temporary property for subscription
+    temp_property_id = request.session.get('temp_property_id')
+    if temp_property_id:
+        try:
+            property = Property.objects.get(id=temp_property_id, owner=request.user)
+        except Property.DoesNotExist:
+            property = None
+    
+    if not temp_property_id or not property:
+        # Create a temporary property with minimum required fields
         property = Property.objects.create(
             owner=request.user,
-            title=title,
-            description=description,
-            property_type=property_type,
-            price=price,
-            bedrooms=bedrooms,
-            bathrooms=bathrooms,
-            area=area,
-            address=address,
-            city=city,
-            state=state,
-            zip_code=zip_code
+            title="Temporary Property",
+            description="Temporary description",
+            price=0,  # Minimum price
+            property_type="house",  # Default type
+            bedrooms=1,
+            bathrooms=1,
+            area=1,
+            address="Temporary address",
+            city="Temporary city",
+            state="Temporary state",
+            zip_code="00000",
+            status="available"
         )
-        
-        # Geocode the address
-        try:
-            full_address = f"{address}, {city}, {state} {zip_code}"
-            geocoding_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={full_address}&key={settings.GOOGLE_MAPS_API_KEY}"
-            response = requests.get(geocoding_url)
-            data = response.json()
-            
-            if data['status'] == 'OK':
-                location = data['results'][0]['geometry']['location']
-                property.latitude = location['lat']
-                property.longitude = location['lng']
-                property.save()
-        except Exception as e:
-            messages.warning(request, 'Could not determine exact location on map.')
-        
-        # Handle image uploads
-        images = request.FILES.getlist('images')
-        for image in images:
-            PropertyImage.objects.create(property=property, image=image)
-        
-        messages.success(request, 'Property created successfully!')
-        return redirect('rentease:property_detail', slug=property.slug)
-    
-    return render(request, 'RentEase/property_form.html')
+        request.session['temp_property_id'] = property.id
+
+    context = {
+        'form': form,
+        'title': 'List Your Property',
+        'property': property,
+        'paypal_client_id': settings.PAYPAL_CLIENT_ID,
+        'is_temporary': True
+    }
+    return render(request, 'RentEase/property_form.html', context)
 
 @login_required
 def my_properties(request):
@@ -454,3 +455,165 @@ def update_booking_status(request, booking_id):
         return JsonResponse({'status': 'error', 'error': 'Booking not found'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'error': str(e)})
+
+@login_required
+def create_subscription_plan(request, property_id, plan_type='monthly'):
+    setup_paypal()
+    
+    property = get_object_or_404(Property, id=property_id, owner=request.user)
+    
+    # Define billing plans
+    billing_cycles = []
+    if plan_type == 'monthly':
+        amount = "1.00"  # $1 per month
+        frequency = "MONTH"
+        frequency_interval = "1"
+    else:  # yearly
+        amount = "10.00"  # $10 per year
+        frequency = "YEAR"
+        frequency_interval = "1"
+
+    billing_cycles.append({
+        "frequency": {
+            "interval_unit": frequency,
+            "interval_count": frequency_interval
+        },
+        "tenure_type": "REGULAR",
+        "sequence": 1,
+        "total_cycles": 0,  # Infinite cycles
+        "pricing_scheme": {
+            "fixed_price": {
+                "value": amount,
+                "currency_code": "USD"
+            }
+        }
+    })
+
+    plan_attributes = {
+        "name": f"RentEase Property Listing - {property.title}",
+        "description": f"Subscription for property listing: {property.title}",
+        "type": "INFINITE",
+        "payment_preferences": {
+            "auto_bill_outstanding": True,
+            "setup_fee_failure_action": "CONTINUE",
+            "payment_failure_threshold": 3
+        },
+        "billing_cycles": billing_cycles
+    }
+
+    try:
+        plan = paypalrestsdk.BillingPlan.create(plan_attributes)
+        if plan.create():
+            return JsonResponse({
+                'plan_id': plan.id,
+                'success': True
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to create plan'
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+def create_subscription(request, property_id, plan_id):
+    setup_paypal()
+    
+    property = get_object_or_404(Property, id=property_id, owner=request.user)
+    
+    subscription_attributes = {
+        "plan_id": plan_id,
+        "subscriber": {
+            "name": {
+                "given_name": request.user.first_name,
+                "surname": request.user.last_name
+            },
+            "email_address": request.user.email
+        },
+        "application_context": {
+            "brand_name": "RentEase",
+            "locale": "en-US",
+            "shipping_preference": "NO_SHIPPING",
+            "user_action": "SUBSCRIBE_NOW",
+            "payment_method": {
+                "payer_selected": "PAYPAL",
+                "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
+            },
+            "return_url": request.build_absolute_uri(
+                reverse('rentease:subscription_success', kwargs={'property_id': property_id})
+            ),
+            "cancel_url": request.build_absolute_uri(
+                reverse('rentease:subscription_cancel', kwargs={'property_id': property_id})
+            )
+        }
+    }
+
+    try:
+        subscription = paypalrestsdk.Subscription.create(subscription_attributes)
+        if subscription.id:
+            # Store subscription ID in property
+            property.paypal_subscription_id = subscription.id
+            property.save()
+            
+            return JsonResponse({
+                'subscription_id': subscription.id,
+                'approval_url': subscription.links[0].href,
+                'success': True
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to create subscription'
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+def subscription_success(request, property_id):
+    property = get_object_or_404(Property, id=property_id, owner=request.user)
+    subscription_id = request.GET.get('subscription_id')
+    
+    if subscription_id:
+        try:
+            setup_paypal()
+            subscription = paypalrestsdk.Subscription.find(subscription_id)
+            
+            if subscription.status == "ACTIVE":
+                # Update property subscription status
+                property.subscription_active = True
+                property.subscription_end_date = timezone.now() + relativedelta(months=1)
+                property.save()
+                
+                # Clear temporary property from session
+                if 'temp_property_id' in request.session:
+                    del request.session['temp_property_id']
+                
+                messages.success(request, 'Subscription activated successfully!')
+                return redirect('rentease:property_detail', slug=property.slug)
+            
+        except Exception as e:
+            messages.error(request, f'Error activating subscription: {str(e)}')
+    
+    messages.error(request, 'Subscription activation failed.')
+    return redirect('rentease:property_detail', slug=property.slug)
+
+@login_required
+def subscription_cancel(request, property_id):
+    property = get_object_or_404(Property, id=property_id, owner=request.user)
+    
+    # Delete temporary property if it exists
+    if 'temp_property_id' in request.session:
+        temp_property_id = request.session['temp_property_id']
+        if str(property_id) == str(temp_property_id):
+            property.delete()
+        del request.session['temp_property_id']
+    
+    messages.warning(request, 'Subscription process was cancelled.')
+    return redirect('rentease:property_list')
