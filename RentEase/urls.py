@@ -11,7 +11,7 @@ urlpatterns = [
     path('property/<slug:slug>/delete/', views.property_delete, name='property_delete'),
     path('my-properties/', views.my_properties, name='my_properties'),
     path('delete-image/<int:image_id>/', views.delete_image, name='delete_image'),
-    path('delete-video/<int:property_id>/', views.delete_video, name='delete_video'),
+    path('delete-video/<slug:slug>/', views.delete_video, name='delete_video'),
     
     # User profile and authentication
     path('profile/', views.profile_view, name='profile'),
@@ -27,4 +27,10 @@ urlpatterns = [
     path('subscribe/', views.subscribe, name='subscribe'),
     path('payment-successful/', views.payment_successful, name='payment_successful'),
     path('payment-cancelled/', views.payment_cancelled, name='payment_cancelled'),
+    
+    # Subscription plan URLs
+    path('property/<slug:slug>/create-plan/<str:plan_type>/', views.create_subscription_plan, name='create_subscription_plan'),
+    path('property/<slug:slug>/create-subscription/<str:plan_id>/', views.create_subscription, name='create_subscription'),
+    path('property/<slug:slug>/subscription-success/', views.subscription_success, name='subscription_success'),
+    path('property/<slug:slug>/subscription-cancel/', views.subscription_cancel, name='subscription_cancel'),
 ]

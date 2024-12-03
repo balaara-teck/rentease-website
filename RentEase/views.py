@@ -253,8 +253,8 @@ def property_delete(request, slug):
     })
 
 @login_required
-def delete_video(request, property_id):
-    property = get_object_or_404(Property, id=property_id, owner=request.user)
+def delete_video(request, slug):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     
     if property.video:
         if os.path.isfile(property.video.path):
@@ -469,21 +469,25 @@ def update_booking_status(request, booking_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'error': str(e)})
 
-def create_subscription_plan(request, property_id, plan_type):
+def create_subscription_plan(request, slug, plan_type):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     messages.error(request, 'This subscription method is no longer available.')
-    return redirect('rentease:property_detail', pk=property_id)
+    return redirect('rentease:property_detail', slug=slug)
 
-def create_subscription(request, property_id, plan_id):
+def create_subscription(request, slug, plan_id):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     messages.error(request, 'This subscription method is no longer available.')
-    return redirect('rentease:property_detail', pk=property_id)
+    return redirect('rentease:property_detail', slug=slug)
 
-def subscription_success(request, property_id):
+def subscription_success(request, slug):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     messages.error(request, 'This subscription method is no longer available.')
-    return redirect('rentease:property_detail', pk=property_id)
+    return redirect('rentease:property_detail', slug=slug)
 
-def subscription_cancel(request, property_id):
+def subscription_cancel(request, slug):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     messages.error(request, 'This subscription method is no longer available.')
-    return redirect('rentease:property_detail', pk=property_id)
+    return redirect('rentease:property_detail', slug=slug)
 
 @login_required
 def subscribe(request):
