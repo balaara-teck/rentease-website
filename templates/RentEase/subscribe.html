@@ -1,0 +1,42 @@
+{% extends 'RentEase/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">RentEase Premium for Landlords</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="h5 mb-3">Premium Landlord Features Include:</h3>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>List Multiple Properties</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Add Property Video Tours</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced Property Analytics</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority Customer Support</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Featured Property Listings</li>
+                        </ul>
+                        
+                        <div class="pricing-box my-4 p-4 bg-light rounded">
+                            <h4 class="mb-3">Monthly Subscription</h4>
+                            <div class="price-tag mb-3">
+                                <span class="display-4">${{ form.initial.a3 }}</span>
+                                <span class="text-muted">/month</span>
+                            </div>
+                            {{ form.render }}
+                        </div>
+                        
+                        <div class="text-muted small mt-3">
+                            <p class="mb-1">Secure payment powered by PayPal</p>
+                            <p class="mb-0">Cancel anytime through your PayPal account</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

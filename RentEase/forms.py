@@ -56,10 +56,15 @@ class BookingForm(forms.ModelForm):
 class PropertyEditForm(forms.ModelForm):
     class Meta:
         model = Property
-        fields = ['title', 'description', 'price', 'bedrooms', 'bathrooms', 
-                 'area', 'city', 'state', 'property_type', 'is_available']
+        fields = [
+            'title', 'description', 'property_type', 'price',
+            'bedrooms', 'bathrooms', 'area', 'address',
+            'city', 'state', 'zip_code', 'is_available',
+            'video'
+        ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
+            'video': forms.FileInput(attrs={'accept': 'video/mp4,video/mov,video/avi'}),
             'price': forms.NumberInput(attrs={'min': 0}),
             'bedrooms': forms.NumberInput(attrs={'min': 0}),
             'bathrooms': forms.NumberInput(attrs={'min': 0}),

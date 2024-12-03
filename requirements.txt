@@ -4,6 +4,7 @@ cffi==1.17.1
 charset-normalizer==3.4.0
 cryptography==44.0.0
 Django==5.1.3
+django-widget-tweaks==1.5.0
 idna==3.10
 paypalrestsdk==1.13.3
 pillow==11.0.0

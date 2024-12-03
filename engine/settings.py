@@ -16,6 +16,10 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Make sure Python can find our apps
+import sys
+if str(BASE_DIR) not in sys.path:
+    sys.path.append(str(BASE_DIR))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -41,7 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'RentEase',
-    'paypalrestsdk',  # Added paypalrestsdk to INSTALLED_APPS
+    'widget_tweaks',
+    'paypal.standard.ipn',  # Only PayPal IPN
 ]
 
 MIDDLEWARE = [
@@ -128,9 +133,21 @@ MAX_UPLOAD_SIZE = 5242880
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')  # Get from environment variable
 
 # PayPal Settings
-PAYPAL_MODE = "sandbox"  # Change to "live" for production
-PAYPAL_CLIENT_ID = "YOUR_PAYPAL_CLIENT_ID"  # Replace with your PayPal client ID
-PAYPAL_CLIENT_SECRET = "YOUR_PAYPAL_CLIENT_SECRET"  # Replace with your PayPal client secret
+PAYPAL_TEST = True  # Set to False in production
+PAYPAL_RECEIVER_EMAIL = os.environ.get('PAYPAL_RECEIVER_EMAIL', 'your-paypal-business@example.com')
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+PAYPAL_SUBSCRIPTION_PRICE = '9.99'  # Monthly subscription price
+PAYPAL_CURRENCY = 'USD'
+
+# URL Settings
+PAYPAL_RETURN_URL = 'http://localhost:8000/payment-successful/'
+PAYPAL_CANCEL_URL = 'http://localhost:8000/payment-cancelled/'
+PAYPAL_NOTIFY_URL = 'http://localhost:8000/paypal/'
+
+# PayPal IPN settings
+PAYPAL_IPN_DOMAIN = "localhost:8000"
+PAYPAL_IPN_PROTOCOL = "http"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

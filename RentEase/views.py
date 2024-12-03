@@ -1,23 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
-from engine import settings
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
-from .models import Property, PropertyImage, Booking, Profile
+from .models import Property, PropertyImage, Booking, Profile, Subscription
 from .forms import RegisterForm, BookingForm, PropertyEditForm, ProfileForm
 from django.contrib.auth import logout, update_session_auth_hash, login, authenticate
 from django.contrib.auth.forms import PasswordChangeForm
+from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
-from datetime import date
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives, send_mail
-import requests
-import paypalrestsdk
+from django.utils.html import strip_tags
+import os
+from paypal.standard.forms import PayPalPaymentsForm
+from paypal.standard.ipn.signals import valid_ipn_received
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+from datetime import date
 from dateutil.relativedelta import relativedelta
-from .paypal_config import setup_paypal
+import requests
 
 def property_list(request):
     query = request.GET.get('q')
@@ -90,6 +94,15 @@ def property_detail(request, slug):
 
 @login_required
 def property_create(request):
+    # Check if user has an active subscription
+    subscription = Subscription.objects.filter(user=request.user).first()
+    user_properties = Property.objects.filter(owner=request.user).count()
+    
+    # If user has more than one property and no active subscription, redirect to subscribe
+    if user_properties >= 1 and (not subscription or not subscription.is_active()):
+        messages.warning(request, 'You need a subscription to list more than one property.')
+        return redirect('rentease:subscribe')
+        
     if request.method == 'POST':
         form = PropertyEditForm(request.POST, request.FILES)
         if form.is_valid():
@@ -215,70 +228,69 @@ def contact_owner(request, slug):
     return redirect('rentease:property_detail', slug=slug)
 
 @login_required
-def property_delete(request, pk):
-    property = get_object_or_404(Property, pk=pk)
-    
-    # Ensure the user owns this property
-    if property.owner != request.user:
-        messages.error(request, "You don't have permission to delete this property.")
-        return redirect('rentease:my_properties')
+def property_delete(request, slug):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     
     if request.method == 'POST':
-        # Delete all associated images first
+        # Delete associated images
         for image in property.images.all():
-            try:
-                # Try to delete the actual image file if it exists
-                if image.image and hasattr(image.image, 'path') and os.path.isfile(image.image.path):
-                    image.image.delete()
-            except Exception as e:
-                # Log the error but continue with deletion
-                print(f"Error deleting image file: {e}")
-            # Delete the image record
-            image.delete()
+            if image.image:
+                if os.path.isfile(image.image.path):
+                    os.remove(image.image.path)
+        
+        # Delete the video if it exists
+        if property.video:
+            if os.path.isfile(property.video.path):
+                os.remove(property.video.path)
         
         # Delete the property
         property.delete()
-        messages.success(request, "Property has been deleted successfully.")
+        messages.success(request, 'Property deleted successfully!')
         return redirect('rentease:my_properties')
     
-    return redirect('rentease:my_properties')
+    return render(request, 'RentEase/property_confirm_delete.html', {
+        'property': property
+    })
 
 @login_required
-def property_edit(request, pk):
-    property = get_object_or_404(Property, pk=pk)
+def delete_video(request, property_id):
+    property = get_object_or_404(Property, id=property_id, owner=request.user)
     
-    # Ensure the user owns this property
-    if property.owner != request.user:
-        messages.error(request, "You don't have permission to edit this property.")
-        return redirect('rentease:my_properties')
+    if property.video:
+        if os.path.isfile(property.video.path):
+            os.remove(property.video.path)
+        property.video = None
+        property.save()
+        
+    return JsonResponse({'status': 'success'})
+
+@login_required
+def property_edit(request, slug):
+    property = get_object_or_404(Property, slug=slug, owner=request.user)
     
     if request.method == 'POST':
-        form = PropertyEditForm(request.POST, instance=property)
+        form = PropertyEditForm(request.POST, request.FILES, instance=property)
         if form.is_valid():
-            property = form.save(commit=False)
-            property.save()
+            property = form.save()
             
             # Handle image uploads
             images = request.FILES.getlist('images')
-            current_image_count = property.images.count()
-            remaining_slots = 5 - current_image_count  # Maximum 5 images allowed
-            
-            if len(images) > remaining_slots:
-                messages.warning(request, f"Only {remaining_slots} more images allowed. Some images were not uploaded.")
-                images = images[:remaining_slots]
-            
             for image in images:
                 PropertyImage.objects.create(property=property, image=image)
             
-            messages.success(request, "Property updated successfully.")
+            messages.success(request, 'Property updated successfully!')
             return redirect('rentease:property_detail', slug=property.slug)
     else:
         form = PropertyEditForm(instance=property)
     
-    return render(request, 'RentEase/property_edit.html', {
+    context = {
         'form': form,
-        'property': property
-    })
+        'title': 'Edit Property',
+        'property': property,
+        'paypal_client_id': settings.PAYPAL_CLIENT_ID,
+        'is_temporary': False
+    }
+    return render(request, 'RentEase/property_form.html', context)
 
 @login_required
 def delete_image(request, image_id):
@@ -288,15 +300,16 @@ def delete_image(request, image_id):
     # Ensure the user owns this property
     if property.owner != request.user:
         messages.error(request, "You don't have permission to delete this image.")
-        return redirect('rentease:property_edit', pk=property.pk)
+        return redirect('rentease:property_edit', slug=property.slug)
     
     # Delete the image file and record
     if image.image:
-        image.image.delete()
+        if os.path.isfile(image.image.path):
+            os.remove(image.image.path)
     image.delete()
     
     messages.success(request, "Image deleted successfully.")
-    return redirect('rentease:property_edit', pk=property.pk)
+    return redirect('rentease:property_edit', slug=property.slug)
 
 @login_required
 def profile_view(request):
@@ -456,164 +469,100 @@ def update_booking_status(request, booking_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'error': str(e)})
 
-@login_required
-def create_subscription_plan(request, property_id, plan_type='monthly'):
-    setup_paypal()
-    
-    property = get_object_or_404(Property, id=property_id, owner=request.user)
-    
-    # Define billing plans
-    billing_cycles = []
-    if plan_type == 'monthly':
-        amount = "1.00"  # $1 per month
-        frequency = "MONTH"
-        frequency_interval = "1"
-    else:  # yearly
-        amount = "10.00"  # $10 per year
-        frequency = "YEAR"
-        frequency_interval = "1"
+def create_subscription_plan(request, property_id, plan_type):
+    messages.error(request, 'This subscription method is no longer available.')
+    return redirect('rentease:property_detail', pk=property_id)
 
-    billing_cycles.append({
-        "frequency": {
-            "interval_unit": frequency,
-            "interval_count": frequency_interval
-        },
-        "tenure_type": "REGULAR",
-        "sequence": 1,
-        "total_cycles": 0,  # Infinite cycles
-        "pricing_scheme": {
-            "fixed_price": {
-                "value": amount,
-                "currency_code": "USD"
-            }
-        }
-    })
-
-    plan_attributes = {
-        "name": f"RentEase Property Listing - {property.title}",
-        "description": f"Subscription for property listing: {property.title}",
-        "type": "INFINITE",
-        "payment_preferences": {
-            "auto_bill_outstanding": True,
-            "setup_fee_failure_action": "CONTINUE",
-            "payment_failure_threshold": 3
-        },
-        "billing_cycles": billing_cycles
-    }
-
-    try:
-        plan = paypalrestsdk.BillingPlan.create(plan_attributes)
-        if plan.create():
-            return JsonResponse({
-                'plan_id': plan.id,
-                'success': True
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': 'Failed to create plan'
-            }, status=400)
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
-
-@login_required
 def create_subscription(request, property_id, plan_id):
-    setup_paypal()
+    messages.error(request, 'This subscription method is no longer available.')
+    return redirect('rentease:property_detail', pk=property_id)
+
+def subscription_success(request, property_id):
+    messages.error(request, 'This subscription method is no longer available.')
+    return redirect('rentease:property_detail', pk=property_id)
+
+def subscription_cancel(request, property_id):
+    messages.error(request, 'This subscription method is no longer available.')
+    return redirect('rentease:property_detail', pk=property_id)
+
+@login_required
+def subscribe(request):
+    # Check if user already has an active subscription
+    subscription = Subscription.objects.filter(user=request.user).first()
+    user_properties = Property.objects.filter(owner=request.user).count()
     
-    property = get_object_or_404(Property, id=property_id, owner=request.user)
+    if subscription and subscription.is_active():
+        messages.info(request, 'You already have an active subscription.')
+        return redirect('rentease:my_properties')
     
-    subscription_attributes = {
-        "plan_id": plan_id,
-        "subscriber": {
-            "name": {
-                "given_name": request.user.first_name,
-                "surname": request.user.last_name
-            },
-            "email_address": request.user.email
-        },
-        "application_context": {
-            "brand_name": "RentEase",
-            "locale": "en-US",
-            "shipping_preference": "NO_SHIPPING",
-            "user_action": "SUBSCRIBE_NOW",
-            "payment_method": {
-                "payer_selected": "PAYPAL",
-                "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
-            },
-            "return_url": request.build_absolute_uri(
-                reverse('rentease:subscription_success', kwargs={'property_id': property_id})
-            ),
-            "cancel_url": request.build_absolute_uri(
-                reverse('rentease:subscription_cancel', kwargs={'property_id': property_id})
-            )
-        }
+    if user_properties <= 1:
+        messages.info(request, 'You can list one property for free. Subscription is only needed for multiple properties.')
+        return redirect('rentease:my_properties')
+
+    # PayPal payment form
+    paypal_dict = {
+        "cmd": "_xclick-subscriptions",
+        "business": settings.PAYPAL_RECEIVER_EMAIL,
+        "a3": settings.PAYPAL_SUBSCRIPTION_PRICE,  # monthly price
+        "p3": 1,  # duration of each unit (1 month)
+        "t3": "M",  # duration unit (Month)
+        "src": "1",  # make payments recur
+        "sra": "1",  # reattempt payment on payment error
+        "no_note": "1",  # remove extra notes (optional)
+        "item_name": "RentEase Landlord Premium Subscription",
+        "custom": request.user.id,  # Custom field to identify the user
+        "currency_code": settings.PAYPAL_CURRENCY,
+        "return": request.build_absolute_uri(reverse('rentease:payment_successful')),
+        "cancel_return": request.build_absolute_uri(reverse('rentease:payment_cancelled')),
+        "notify_url": request.build_absolute_uri(reverse('paypal-ipn')),
     }
 
-    try:
-        subscription = paypalrestsdk.Subscription.create(subscription_attributes)
-        if subscription.id:
-            # Store subscription ID in property
-            property.paypal_subscription_id = subscription.id
-            property.save()
-            
-            return JsonResponse({
-                'subscription_id': subscription.id,
-                'approval_url': subscription.links[0].href,
-                'success': True
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': 'Failed to create subscription'
-            }, status=400)
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
+    form = PayPalPaymentsForm(initial=paypal_dict)
+    return render(request, 'RentEase/subscribe.html', {'form': form})
 
 @login_required
-def subscription_success(request, property_id):
-    property = get_object_or_404(Property, id=property_id, owner=request.user)
-    subscription_id = request.GET.get('subscription_id')
-    
-    if subscription_id:
-        try:
-            setup_paypal()
-            subscription = paypalrestsdk.Subscription.find(subscription_id)
-            
-            if subscription.status == "ACTIVE":
-                # Update property subscription status
-                property.subscription_active = True
-                property.subscription_end_date = timezone.now() + relativedelta(months=1)
-                property.save()
-                
-                # Clear temporary property from session
-                if 'temp_property_id' in request.session:
-                    del request.session['temp_property_id']
-                
-                messages.success(request, 'Subscription activated successfully!')
-                return redirect('rentease:property_detail', slug=property.slug)
-            
-        except Exception as e:
-            messages.error(request, f'Error activating subscription: {str(e)}')
-    
-    messages.error(request, 'Subscription activation failed.')
-    return redirect('rentease:property_detail', slug=property.slug)
+def payment_successful(request):
+    messages.success(request, 'Thank you for subscribing! Your payment is being processed.')
+    return redirect('rentease:my_properties')
 
 @login_required
-def subscription_cancel(request, property_id):
-    property = get_object_or_404(Property, id=property_id, owner=request.user)
+def payment_cancelled(request):
+    messages.warning(request, 'Your subscription payment was cancelled.')
+    return redirect('rentease:my_properties')
+
+@receiver(valid_ipn_received)
+def ipn_receiver(sender, **kwargs):
+    ipn_obj = sender
     
-    # Delete temporary property if it exists
-    if 'temp_property_id' in request.session:
-        temp_property_id = request.session['temp_property_id']
-        if str(property_id) == str(temp_property_id):
-            property.delete()
-        del request.session['temp_property_id']
-    
-    messages.warning(request, 'Subscription process was cancelled.')
-    return redirect('rentease:property_list')
+    if ipn_obj.payment_status == "Completed":
+        # Check if it's a subscription payment
+        if ipn_obj.txn_type == "subscr_payment":
+            try:
+                user = User.objects.get(id=ipn_obj.custom)
+                subscription, created = Subscription.objects.get_or_create(user=user)
+                subscription.activate(ipn_obj.subscr_id)
+                
+                # Send confirmation email
+                subject = 'RentEase Subscription Activated'
+                message = f'Your RentEase subscription has been activated. Valid until: {subscription.end_date}'
+                user.email_user(subject, message)
+                
+            except User.DoesNotExist:
+                # Log error or handle invalid user
+                pass
+        
+        # Handle subscription cancellation
+        elif ipn_obj.txn_type == "subscr_cancel":
+            try:
+                user = User.objects.get(id=ipn_obj.custom)
+                subscription = Subscription.objects.get(user=user)
+                subscription.cancel()
+                
+                # Send cancellation email
+                subject = 'RentEase Subscription Cancelled'
+                message = 'Your RentEase subscription has been cancelled.'
+                user.email_user(subject, message)
+                
+            except (User.DoesNotExist, Subscription.DoesNotExist):
+                # Log error or handle invalid user/subscription
+                pass

@@ -150,6 +150,24 @@
                 </div>
             </div>
 
+            {% if property.video %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h3 class="h5 mb-0"><i class="fas fa-video me-2"></i>Property Video Tour</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="video-container position-relative">
+                            <div class="ratio ratio-16x9">
+                                <video class="rounded-bottom" controls preload="metadata">
+                                    <source src="{{ property.video.url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
             <!-- Property Details -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">

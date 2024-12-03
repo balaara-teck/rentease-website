@@ -13,10 +13,24 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils import timezone
+import tempfile
 
 def validate_image_size(value):
     if value.size > settings.MAX_UPLOAD_SIZE:
         raise ValidationError(f'File size too large. Size should not exceed {settings.MAX_UPLOAD_SIZE/1024/1024:.1f} MB.')
+
+def validate_video_size(value):
+    # 20MB limit for videos
+    max_size = 20 * 1024 * 1024  # 20MB in bytes
+    if value.size > max_size:
+        raise ValidationError(f'Video size must be less than 20MB. Your video is {value.size / (1024*1024):.1f}MB')
+
+def validate_video_format(value):
+    import os
+    valid_extensions = ['.mp4']  # Only allow MP4 for better compatibility
+    ext = os.path.splitext(value.name)[1].lower()
+    if ext not in valid_extensions:
+        raise ValidationError('Only MP4 video format is supported.')
 
 class Property(models.Model):
     PROPERTY_TYPES = [
@@ -55,6 +69,13 @@ class Property(models.Model):
     subscription_active = models.BooleanField(default=False)
     subscription_end_date = models.DateTimeField(null=True, blank=True)
     paypal_subscription_id = models.CharField(max_length=100, null=True, blank=True)
+    video = models.FileField(
+        upload_to='property_videos/', 
+        null=True, 
+        blank=True,
+        validators=[validate_video_size, validate_video_format],
+        help_text="Upload a video tour (max 20MB, MP4 format only)"
+    )
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -182,6 +203,44 @@ def booking_status_changed(sender, instance, created, **kwargs):
         )
         email.attach_alternative(html_message, "text/html")
         email.send(fail_silently=False)
+
+class Subscription(models.Model):
+    SUBSCRIPTION_STATUS = [
+        ('active', 'Active'),
+        ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=SUBSCRIPTION_STATUS, default='expired')
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    paypal_subscription_id = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s subscription ({self.status})"
+
+    def is_active(self):
+        if self.status == 'active' and self.end_date:
+            return self.end_date > timezone.now()
+        return False
+
+    def activate(self, subscription_id, months=1):
+        self.status = 'active'
+        self.paypal_subscription_id = subscription_id
+        self.start_date = timezone.now()
+        self.end_date = self.start_date + timezone.timedelta(days=30 * months)
+        self.save()
+
+    def cancel(self):
+        self.status = 'cancelled'
+        self.save()
+
+    def expire(self):
+        self.status = 'expired'
+        self.save()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

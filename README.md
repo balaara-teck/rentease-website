@@ -99,23 +99,65 @@ pip install -r requirements.txt
 4. Configure settings:
 ```bash
 cp .env.example .env
-# Update .env with your settings
+# Edit .env with your configuration values
 ```
 
-5. Initialize database:
+5. Set up PayPal Integration:
+   - Go to [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/)
+   - Create a PayPal Business account if you don't have one
+   - Go to "Apps & Credentials"
+   - Click "Create App"
+   - Name your app (e.g., "RentEase")
+   - Choose "Merchant" as the app type
+   - Copy the Client ID and Secret to your .env file
+   - Update PAYPAL_RECEIVER_EMAIL with your PayPal business email
+
+6. Run migrations:
 ```bash
 python manage.py migrate
 ```
 
-6. Create admin account:
+7. Create a superuser:
 ```bash
 python manage.py createsuperuser
 ```
 
-7. Start development server:
+8. Run the development server:
 ```bash
 python manage.py runserver
 ```
+
+Access the application at http://localhost:8000
+
+## Environment Variables
+
+The following environment variables need to be set in your .env file:
+
+```
+# PayPal Configuration
+PAYPAL_CLIENT_ID=your_client_id_here
+PAYPAL_CLIENT_SECRET=your_secret_here
+PAYPAL_RECEIVER_EMAIL=your_paypal_business_email
+
+# Google Maps API (optional)
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+```
+
+## Development Mode vs Production
+
+By default, the application runs in development mode with:
+- Debug mode enabled
+- SQLite database
+- PayPal sandbox environment
+- Local email backend
+
+For production deployment:
+1. Set DEBUG=False in settings.py
+2. Configure a production database (e.g., PostgreSQL)
+3. Set up a proper email backend
+4. Set PAYPAL_TEST=False in settings.py
+5. Use proper SSL/TLS certificates
+6. Configure proper static file serving
 
 ## Usage
 
