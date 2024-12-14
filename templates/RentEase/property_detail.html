@@ -1,19 +1,8 @@
 {% extends 'RentEase/base.html' %}
 {% load static %}
 
-{% block title %}{{ property.title }} - RentEase{% endblock %}
+{% block title %}{{ property.title }}{% endblock %}
 
-{% block extra_head %}
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
-    <style>
-        #map {
-            height: 400px;
-            width: 100%;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-    </style>
-{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -208,8 +197,8 @@
             <!-- Location Map -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <h3>Location</h3>
-                    <div id="map"></div>
+                    <h3>Location On Map</h3>
+                    <div id="map-view"></div>
                 </div>
             </div>
         </div>

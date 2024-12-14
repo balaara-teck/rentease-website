@@ -3,33 +3,34 @@
 {% block title %}Login - RentEase{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+
+<div class="row justify-content-center mb-3" >
     <div class="col-md-6 col-lg-4">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h1 class="h3 mb-4 text-center">Login</h1>
 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
+                {% if form.non_field_errors %}    
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
                 {% endif %}
 
-                <form method="post" action="{% url 'login' %}">
+                <form method="post">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Username or Email</label>
-                        <input type="text" name="username" id="id_username" class="form-control" required placeholder="Enter your username or email">
+                        <input type="text" name="username" id="id_username" class="form-control" required placeholder="e.g. RentEase4U">
                     </div>
                     <div class="mb-3">
                         <label for="id_password" class="form-label">Password</label>
-                        <input type="password" name="password" id="id_password" class="form-control" required placeholder="Enter your password">
+                        <input type="password" name="password" id="id_password" class="form-control" required placeholder="e.g. RentEase4All">
                         <div class="text-end mt-1">
                             <a href="{% url 'password_reset' %}" class="text-decoration-none small">Forgot Password?</a>
                         </div>
+                       
                     </div>
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Login</button>
@@ -42,5 +43,6 @@
             </div>
         </div>
     </div>
+    <div class="col-md-6 col-lg-4"></div>
 </div>
 {% endblock %}

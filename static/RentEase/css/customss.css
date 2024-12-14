@@ -1,13 +1,13 @@
 :root {
     /* Light theme variables */
-    --primary-color: #4eb854;      /* Dark green */
-    --primary-light: #4CAF50;      /* Medium green */
-    --primary-lighter: #81C784;    /* Light green */
-    --accent-color: #66BB6A;       /* Bright green */
-    --success-color: #43A047;      /* Success green */
-    --hover-color: #1B5E20;        /* Darker green for hover states */
-    --bg-light: #E8F5E9;          /* Very light green background */
-    --text-on-primary: #FFFFFF;    /* White text on green backgrounds */
+    --primary-color: #4eb854;      
+    --primary-light: #4CAF50;      
+    --primary-lighter: #81C784;    
+    --accent-color: #66BB6A;      
+    --success-color: #43A047;    
+    --hover-color: #1B5E20;        
+    --bg-light: #E8F5E9;          
+    --text-on-primary: #FFFFFF;    
     
     /* Theme variables */
     --bg-color: #ffffff;

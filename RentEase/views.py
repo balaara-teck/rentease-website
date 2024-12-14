@@ -374,17 +374,16 @@ def login_view(request):
                 return redirect(next_url)
             return redirect('rentease:property_list')
         else:
-            messages.error(request, 'Invalid username or password.')
-    
+            messages.error(request, 'Invalid username or password.', extra_tags='danger')
+
+
+
     return render(request, 'registration/login.html')
 
-def custom_logout(request):
+def logout_view(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('rentease:property_list')
-
-def logout_view(request):
-    return custom_logout(request)
 
 @login_required
 def manage_bookings(request):
