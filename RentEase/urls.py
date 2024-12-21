@@ -33,4 +33,16 @@ urlpatterns = [
     path('property/<slug:slug>/create-subscription/<str:plan_id>/', views.create_subscription, name='create_subscription'),
     path('property/<slug:slug>/subscription-success/', views.subscription_success, name='subscription_success'),
     path('property/<slug:slug>/subscription-cancel/', views.subscription_cancel, name='subscription_cancel'),
+    
+    # Footer Static Pages
+    path('about-us/', views.about_us, name='about_us'),
+    path('how-it-works/', views.how_it_works, name='how_it_works'),
+    path('careers/', views.careers, name='careers'),
+    path('press/', views.press, name='press'),
+    path('help-center/', views.help_center, name='help_center'),
+    path('safety-info/', views.safety_info, name='safety_info'),
+    path('contact-us/', views.contact_us, name='contact_us'),
+    path('terms-of-service/', views.terms_of_service, name='terms_of_service'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('cookie-policy/', views.cookie_policy, name='cookie_policy'),
 ]

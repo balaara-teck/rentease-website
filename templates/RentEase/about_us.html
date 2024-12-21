@@ -1,0 +1,95 @@
+{% extends 'RentEase/base.html' %}
+{% load static %}
+
+{% block title %}About Us - RentEase{% endblock %}
+
+{% block content %}
+<div class="about-us-page">
+    <!-- Hero Section -->
+    <div class="hero-section text-white text-center">
+        <h1 class="display-4 fw-bold">Welcome to RentEase</h1>
+        <p class="lead mt-2">Your perfect platform for finding homes, apartments, and hotels.</p>
+    </div>
+
+    <!-- About Us Section -->
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Who We Are</h2>
+            <p class="text-muted">A little about our journey and what we stand for.</p>
+        </div>
+        <p>
+            At <strong>RentEase</strong>, our mission is to simplify the rental process for everyone. We connect landlords with tenants 
+            through a secure and user-friendly platform, offering everything you need to find the perfect place to stay. Our goal 
+            is to make house-hunting seamless, efficient, and enjoyable.
+        </p>
+    </div>
+
+    <!-- Vision Section -->
+    <div class="vision-section bg-light py-5">
+        <div class="container text-center">
+            <h2 class="fw-bold">Our Vision</h2>
+            <p class="text-muted mb-4">A better way to find your next home or stay.</p>
+            <p>
+                We envision a world where renting is transparent, effortless, and fun. With cutting-edge technology and a commitment to 
+                customer satisfaction, <strong>RentEase</strong> is redefining the rental experience.
+            </p>
+        </div>
+    </div>
+
+    <!-- Image Highlights -->
+    <div class="container mt-5">
+        <h2 class="fw-bold text-center mb-4">Discover RentEase</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/house1.jpg' %}" class="card-img-top" alt="Modern House">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Modern Living Spaces</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/map.jpg' %}" class="card-img-top" alt="Google Maps">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Google Maps Integration</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/hotel.jpg' %}" class="card-img-top" alt="Luxurious Hotels">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Luxurious Hotels</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Choose Us -->
+    <div class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <h2 class="fw-bold">Why Choose RentEase?</h2>
+            <ul class="list-unstyled mt-4">
+                <li><i class="bi bi-check-circle-fill text-success"></i> User-friendly platform for all your rental needs.</li>
+                <li><i class="bi bi-check-circle-fill text-success"></i> Advanced location searches with Google Maps.</li>
+                <li><i class="bi bi-check-circle-fill text-success"></i> Secure bookings and payments.</li>
+                <li><i class="bi bi-check-circle-fill text-success"></i> Dedicated customer support team.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<style>
+    .card:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s;
+}
+
+.hero-section h1 {
+    font-size: 4rem;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+</style>
+{% endblock %}

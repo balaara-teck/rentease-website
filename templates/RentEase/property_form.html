@@ -1,9 +1,7 @@
 {% extends 'RentEase/base.html' %}
 {% load static %}
 {% load widget_tweaks %}
-
 {% block title %}{{ title }}{% endblock %}
-
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
@@ -14,14 +12,12 @@
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data" id="propertyForm">
-                        {% csrf_token %}
-                        
+                        {% csrf_token %}                       
                         {% if form.errors %}
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>Please correct the errors below.
                         </div>
-                        {% endif %}
-                        
+                        {% endif %}                      
                         <div class="row g-4">
                             {% for field in form %}
                             <div class="col-md-6">
@@ -52,22 +48,29 @@
                             </div>
                             {% endfor %}
                         </div>
-
                         <hr class="my-4 border-primary-subtle">
-
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label fw-bold text-primary">
                                         <i class="fas fa-images me-2"></i>Property Images
                                     </label>
+                                    {% if property.images.exists %}
+                                    <div class="row">
+                                        {% for image in property.images.all %}
+                                        <div class="col-4 mb-2">
+                                            <img src="{{ image.image.url }}" class="img-fluid" alt="Property Image">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                    
                                     <input type="file" name="images" multiple class="form-control border-primary-subtle" accept="image/*">
                                     <div class="form-text text-muted small mt-2">
                                         <i class="fas fa-info-circle me-1"></i>You can select multiple images
                                     </div>
                                 </div>
                             </div>
-
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label fw-bold text-primary">
@@ -100,19 +103,14 @@
                                         </div>
                                     </div>
                                     {% endif %}
-                                    <input type="file" name="video" class="form-control border-primary-subtle" accept="video/mp4" {% if needs_subscription %}disabled{% endif %}>
-                                    <div class="form-text text-muted small mt-2">
-                                        <i class="fas fa-info-circle me-1"></i>Upload a video tour (MP4 format)
-                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="text-end mt-4">
-                            <a href="{% url 'rentease:property_list' %}" class="btn btn-light me-2">
+                        <div class="text-end mt-4 d-flex justify-content-center">
+                            <a href="{% url 'rentease:property_list' %}" class="btn btn-light me-2 w-100">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-save me-1"></i>Save Property
                             </button>
                         </div>
@@ -124,42 +122,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&vault=true"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const subscribeButtons = document.querySelectorAll('.subscribe-btn');
-    const propertyForm = document.getElementById('propertyForm');
-    
-    subscribeButtons.forEach(button => {
-        button.addEventListener('click', async function() {
-            const planType = this.dataset.planType;
-            
-            try {
-                // Create plan
-                const planResponse = await fetch(`{% url 'rentease:create_subscription_plan' slug=property.slug plan_type='PLAN_TYPE' %}`.replace('PLAN_TYPE', planType));
-                const planData = await planResponse.json();
-                
-                if (!planData.success) {
-                    throw new Error(planData.error || 'Failed to create plan');
-                }
-                
-                // Create subscription
-                const subscriptionResponse = await fetch(`{% url 'rentease:create_subscription' slug=property.slug plan_id='PLAN_ID' %}`.replace('PLAN_ID', planData.plan_id));
-                const subscriptionData = await subscriptionResponse.json();
-                
-                if (!subscriptionData.success) {
-                    throw new Error(subscriptionData.error || 'Failed to create subscription');
-                }
-                
-                // Redirect to PayPal
-                window.location.href = subscriptionData.approval_url;
-                
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        });
-    });
-});
-</script>
-{% endblock %}
+

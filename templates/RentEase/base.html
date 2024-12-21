@@ -121,29 +121,29 @@
                 <div class="footer-section">
                     <h5>About RentEase</h5>
                     <ul class="footer-links">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">How It Works</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press</a></li>
+                        <li><a href="{% url 'rentease:about_us' %}">About Us</a></li>
+                        <li><a href="{% url 'rentease:how_it_works' %}">How It Works</a></li>
+                        <li><a href="{% url 'rentease:careers' %}">Careers</a></li>
+                        <li><a href="{% url 'rentease:press' %}">Press</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h5>Support</h5>
                     <ul class="footer-links">
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Safety Information</a></li>
+                        <li><a href="{% url 'rentease:help_center' %}">Help Center</a></li>
+                        <li><a href="{% url 'rentease:safety_info' %}">Safety Information</a></li>
                         <li><a href="#">Cancellation Options</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="{% url 'rentease:contact_us' %}">Contact Us</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h5>Legal</h5>
                     <ul class="footer-links">
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="{% url 'rentease:terms_of_service' %}">Terms of Service</a></li>
+                        <li><a href="{% url 'rentease:privacy_policy' %}">Privacy Policy</a></li>
+                        <li><a href="{% url 'rentease:cookie_policy' %}">Cookie Policy</a></li>
                     </ul>
                 </div>
                 

@@ -569,3 +569,83 @@ def ipn_receiver(sender, **kwargs):
             except (User.DoesNotExist, Subscription.DoesNotExist):
                 # Log error or handle invalid user/subscription
                 pass
+
+def about_us(request):
+    """
+    View for the About Us page
+    """
+    return render(request, 'RentEase/about_us.html', {
+        'page_title': 'About RentEase'
+    })
+
+def how_it_works(request):
+    """
+    View for the How It Works page
+    """
+    return render(request, 'RentEase/how_it_works.html', {
+        'page_title': 'How RentEase Works'
+    })
+
+def careers(request):
+    """
+    View for the Careers page
+    """
+    return render(request, 'RentEase/careers.html', {
+        'page_title': 'Careers at RentEase'
+    })
+
+def press(request):
+    """
+    View for the Press page
+    """
+    return render(request, 'RentEase/press.html', {
+        'page_title': 'RentEase in the Press'
+    })
+
+def help_center(request):
+    """
+    View for the Help Center page
+    """
+    return render(request, 'RentEase/help_center.html', {
+        'page_title': 'Help Center'
+    })
+
+def safety_info(request):
+    """
+    View for Safety Information page
+    """
+    return render(request, 'RentEase/safety_info.html', {
+        'page_title': 'Safety Information'
+    })
+
+def contact_us(request):
+    """
+    View for Contact Us page
+    """
+    return render(request, 'RentEase/contact_us.html', {
+        'page_title': 'Contact RentEase'
+    })
+
+def terms_of_service(request):
+    """
+    View for Terms of Service page
+    """
+    return render(request, 'RentEase/terms_of_service.html', {
+        'page_title': 'Terms of Service'
+    })
+
+def privacy_policy(request):
+    """
+    View for Privacy Policy page
+    """
+    return render(request, 'RentEase/privacy_policy.html', {
+        'page_title': 'Privacy Policy'
+    })
+
+def cookie_policy(request):
+    """
+    View for Cookie Policy page
+    """
+    return render(request, 'RentEase/cookie_policy.html', {
+        'page_title': 'Cookie Policy'
+    })
