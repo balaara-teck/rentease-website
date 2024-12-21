@@ -261,8 +261,9 @@ def delete_video(request, slug):
             os.remove(property.video.path)
         property.video = None
         property.save()
+        messages.success(request, 'Video deleted successfully.')
         
-    return JsonResponse({'status': 'success'})
+    return redirect('rentease:property_edit', slug=slug)
 
 @login_required
 def property_edit(request, slug):
